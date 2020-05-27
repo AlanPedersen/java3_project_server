@@ -39,6 +39,8 @@ public class MessageServer extends Application {
     // admin user name and password
     public static final String ADMIN_USER = "admin";
     public static final String ADMIN_PW = "adminPw";
+    // system message lable
+    public static final String SYS_USER = "sys: ";
     
     
     // declare global interface elements
@@ -57,7 +59,7 @@ public class MessageServer extends Application {
             FXCollections.observableArrayList();
 
     // the client manager object
-    // private static ClientList ClientManager = new ClientList( clientList);
+    private static ClientList ClientManager = new ClientList( clientList);
     
     // port number for socket
     public static final int PORT_NUMBER = 8081;
@@ -77,16 +79,13 @@ public class MessageServer extends Application {
     public void start(Stage primaryStage) {
         // set the accessable stage
         mainStage = primaryStage;
-
-        // create the admin user
-        // ClientManager.AddAdminUser( ADMIN_USER, ADMIN_PW);
-
+        
         // in testing mode create test users
         if(testingFlag)
             // ClientManager.AddTestUsers();
         
         // application title
-        primaryStage.setTitle("IPC server");
+        primaryStage.setTitle("Message server");
 
         // create a grid container to hold the interface elements
         GridPane layoutGrid = new GridPane();
@@ -99,8 +98,199 @@ public class MessageServer extends Application {
         // display the form
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        // load the users
+        DataStore.LoadUsers(ClientManager);
         
     }
+    
+    // create a new user
+    public static void CreateNewUser()
+    {        
+        // declare local variables
+        String newName;
+        String newPw;
+        String message;
 
+        // try to read values from the form
+        try {
+            // read the user name
+            newName = MainForm.GetUserName();
+            newPw = MainForm.GetUserPw();
+            
+            // add the user
+            ClientManager.AddClient(newName, newPw);
+            
+            // cleanup
+            MainForm.ClearUserFields();
+                    
+            // create the message
+            message = String.format("new user created %s", 
+                    newName);
+            
+            // display message
+            MainForm.ShowReceivedMessage( SYS_USER + message);
+            // save a log message
+            DataStore.AddLogRecord(message);
+            
+        }
+        catch ( Exception ex)
+        {
+            MainForm.ShowErrorMessage(ex.getMessage());
+            
+        }
+    
+    }
+    
+    // log a user into the system
+    public static void UserLogIn()
+    {
+        // declare local variables
+        String newName;
+        String newPw;
+        Client testClient;
+        Boolean passwordValid;
+        String message;
+        
+        // try to read values from the form
+        try {
+            // read the user name
+            newName = MainForm.GetUserName();
+            newPw = MainForm.GetUserPw();
+            
+            // add the Client object
+            testClient = ClientManager.FindNode(newName);
+
+            // test for a null value
+            if( testClient != null)
+            {
+                // test the password
+                passwordValid = PassWordManager.CheckPassword( newPw, 
+                        testClient.getPasswordHash(),
+                        testClient.getPasswordSalt());
+                
+                // set the active flag
+                testClient.setActiveFlag(passwordValid);
+
+                // was the username & password combination valid
+                if( passwordValid)
+                {
+                    // test for an admin login
+                    if(newName.equals(ADMIN_USER))
+                        MainForm.AdminLogin();
+
+                    // cleanup
+                    MainForm.ClearUserFields();
+                    
+                    // create the message
+                    message = String.format("sucessfull test login for %s", 
+                            newName);
+                    // display message
+                    MainForm.ShowReceivedMessage(SYS_USER + message);
+                    // record log message
+                    DataStore.AddLogRecord(message);
+                    
+                }
+                else
+                {
+                    // error message invalid password fail
+                    // create the error message
+                    message = String.format("the password is not valid for %s", 
+                            newName);
+                    // display message
+                    MainForm.ShowErrorMessage( message);
+                    // record log message
+                    DataStore.AddLogRecord(message);
+                    
+                }
+                
+            }
+            else
+            {
+                // error message invalid user name
+                // create the error message
+                message = String.format("the user name %s could not be found", 
+                        newName);
+                // display message
+                MainForm.ShowErrorMessage( message);
+                // record log message
+                DataStore.AddLogRecord(message);
+                
+            }
+            
+        }
+        catch ( Exception ex)
+        {
+            MainForm.ShowErrorMessage(ex.getMessage());
+            
+        }
+        
+        // update the client list
+        ClientManager.ListNodes();
+        
+    }
+    
+    // log a user out of the system
+    public static void UserLogOut()
+    {
+        // declare local variables
+        String newName;
+        Client testClient;
+        String message;
+        
+        // try to read values from the form
+        try {
+            // read the user name
+            newName = MainForm.GetUserName();
+            
+            // add the Client object
+            testClient = ClientManager.FindNode(newName);
+
+            // test for a null value
+            if( testClient != null)
+            {
+                // set the active flag to false
+                testClient.setActiveFlag(false);
+
+                // test for an admin log out
+                if(newName.equals(ADMIN_USER))
+                    MainForm.AdminLogout();
+
+                // cleanup
+                MainForm.ClearUserFields();
+                    
+                // create the message
+                message = String.format("log out for %s", 
+                        newName);
+                // display message
+                MainForm.ShowReceivedMessage(SYS_USER + message);
+                // record log event
+                DataStore.AddLogRecord(message);
+                
+            }
+            else
+            {
+                // error message invalid user name
+                // create the error message
+                message = String.format("the user name %s could not be found", 
+                        newName);
+                // display message
+                MainForm.ShowErrorMessage( message);
+                // record log event
+                DataStore.AddLogRecord(message);
+                
+            }
+            
+        }
+        catch ( Exception ex)
+        {
+            MainForm.ShowErrorMessage(ex.getMessage());
+            
+        }
+        
+        // update the client list
+        ClientManager.ListNodes();
+        
+    }
 
 }

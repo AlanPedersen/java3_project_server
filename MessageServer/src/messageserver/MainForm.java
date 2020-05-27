@@ -219,9 +219,9 @@ public class MainForm {
         btnDisconnect.setPrefWidth(80);
         btnNewUser.setPrefWidth(80);
         // disable the new user button
-        //btnNewUser.setDisable(true);
+        btnNewUser.setDisable(true);
         // disable the disconnect button
-        //btnDisconnect.setDisable(true);
+        btnDisconnect.setDisable(true);
         
         // set the list width
         clientListView.setPrefWidth(300);
@@ -382,7 +382,7 @@ public class MainForm {
             System.out.println("user log in");
         
         // call the login method
-        // MessageServer.UserLogIn();
+        MessageServer.UserLogIn();
         
     }
     
@@ -393,7 +393,7 @@ public class MainForm {
             System.out.println("user log out");
         
         // call the logout method
-        // MessageServer.UserLogOut();
+        MessageServer.UserLogOut();
         
     }
     
@@ -414,7 +414,7 @@ public class MainForm {
             System.out.println("new user");
         
         // call the create user method
-        // MessageServer.CreateNewUser();
+        MessageServer.CreateNewUser();
         
     }
     
