@@ -371,7 +371,7 @@ public class MainForm {
             System.out.println("start server");
         
         // start the server
-        // MessageServer.StartSocketServer();
+        MessageServer.StartSocketServer();
         
     }
     
@@ -403,7 +403,7 @@ public class MainForm {
         if( MessageServer.testingFlag)
             System.out.println("disconnect user");
         
-        // MessageServer.DisconnectSelectedUser();
+        MessageServer.DisconnectSelectedUser();
         
     }
     
@@ -446,7 +446,7 @@ public class MainForm {
         if( MessageServer.testingFlag)
             System.out.println("send message");
         // broadcast the message
-        // MessageServer.BroadcastMessage();
+        MessageServer.BroadcastMessage();
         
     }
     

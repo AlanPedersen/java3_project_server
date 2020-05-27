@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
@@ -29,7 +30,7 @@ public class MessageServer extends Application {
 
     // testing flag
     // set to true to see progress messages from within the code
-    public static boolean testingFlag = true;
+    public static boolean testingFlag = false;
     // disconnect string
     public static final String DISCONNECT = "closeConnection";
     // login attempt outcome
@@ -65,8 +66,8 @@ public class MessageServer extends Application {
     public static final int PORT_NUMBER = 8081;
 
     // instantiate the listener object
-    // private static ListenForClient listener 
-    //         = new ListenForClient( ClientManager, PORT_NUMBER);
+    private static ListenForClient listener 
+            = new ListenForClient( ClientManager, PORT_NUMBER);
 
     public static void main(String[] args) {
         // start the GUI application
@@ -77,6 +78,9 @@ public class MessageServer extends Application {
     @Override
     // setup and run the GUI
     public void start(Stage primaryStage) {
+        // create the help form
+        Stage helpStage = HelpForm.MakeHelpForm();
+
         // set the accessable stage
         mainStage = primaryStage;
         
@@ -95,6 +99,17 @@ public class MessageServer extends Application {
         
         // set the scene
         Scene scene = new Scene( layoutGrid);
+   
+        // trap the 'F1' key show help form
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.F1) {
+                if( testingFlag)
+                    System.out.println("help!");
+                // show the help form
+                helpStage.show();
+            }
+        });
+        
         // display the form
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -292,5 +307,88 @@ public class MessageServer extends Application {
         ClientManager.ListNodes();
         
     }
+    
+    // start a thread to listen for clients
+    public static void StartSocketServer()
+    {
+        // start the thread running
+        listener.start();
+        
+    }
+    
+    // broadcast a message to all active clients
+    public static void BroadcastMessage()
+    {
+        // declare local variables
+        String message;
 
+        // try to read the message
+        try {
+            // read the message
+            message = MainForm.GetSendMessage();
+
+            // broadcast the message
+            ClientManager.MessageAllClients(message);
+            
+            // clear the message
+            MainForm.ClearMessageSent();
+                    
+        }
+        catch ( Exception ex)
+        {
+            MainForm.ShowErrorMessage(ex.getMessage());
+            
+        }
+        
+    }
+    
+    // disconnect the selected user
+    public static void DisconnectSelectedUser()
+    {
+        // set local variables
+        String clientRecord;
+        String clientName;
+        Client disconnectClient;
+        String message;
+        
+        // get the current record
+        clientRecord = MainForm.GetSelectedClient();
+
+        // get the client name from the record
+        clientName = ClientManager.GetClientNameFromListRecord( clientRecord);
+        
+        // get the client object
+        disconnectClient = ClientManager.FindNode(clientName);
+        
+        // send a disconnect message
+        ClientManager.MessageOneClient(disconnectClient, DISCONNECT);
+        
+        // local disconnect message
+        message = String.format("client disconnected: %s", clientName);
+        MainForm.ShowReceivedMessage(message);
+        // create log message
+        DataStore.AddLogRecord(message);
+        
+        // try to close connections
+        try
+        {
+            // close connections
+            disconnectClient.getReadStream().close();
+            disconnectClient.getWriteStream().close();
+            disconnectClient.getServerSocket().close();
+
+            // set connections to null
+            disconnectClient.setReadStream( null);
+            disconnectClient.setWriteStream( null);
+            disconnectClient.setServerSocket( null);
+            
+        }
+        catch ( Exception ex)
+        {
+            MainForm.ShowErrorMessage(ex.getMessage());
+            
+        }
+        
+    }
+    
 }

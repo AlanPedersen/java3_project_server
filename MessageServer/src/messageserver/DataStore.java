@@ -6,7 +6,6 @@
 package messageserver;
 
 import java.sql.*;
-import java.util.Arrays;
 
 /**
  * Name: Alan Pedersen
